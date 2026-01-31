@@ -20,4 +20,4 @@ To provide clear, simple, and focused study support using an AI chatbot.
 
 ## Project Links
 - Trello: https://trello.com/invite/b/697ce316d7d388ff5f0ecb09/ATTI99f24b01519eda6f5caba9439545e5ec27691AAB/ai-study-companion
-- Figma: (to be added)
+- Figma: https://www.figma.com/design/tELKFU7hQCOB6ocpnx8D4X/AI-Study-Companion-%E2%80%93-Wireframes?node-id=1-17&t=hAIWsWdJw6vht9RW-1
