@@ -19,5 +19,5 @@ To provide clear, simple, and focused study support using an AI chatbot.
 - Aron Rrmoku
 
 ## Project Links
-- Trello: (to be added)
+- Trello: https://trello.com/invite/b/697ce316d7d388ff5f0ecb09/ATTI99f24b01519eda6f5caba9439545e5ec27691AAB/ai-study-companion
 - Figma: (to be added)
