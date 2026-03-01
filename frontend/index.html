@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamAce - AI Study Partner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="auth-container">
+        <div class="login-card animate-pop">
+            <div id="welcome-screen" class="fade-in">
+                <h1>Welcome to ExamAce</h1>
+                <p class="subtitle">Your Study Partner</p>
+                <button class="btn-submit" onclick="showForm('login')">Log In</button>
+                <button class="btn-outline" onclick="showForm('register')">Register</button>
+            </div>
+
+            <form id="auth-form" class="hidden fade-in" data-mode="login">
+                <h1 id="form-title">Login</h1>
+                <div id="register-fields" class="hidden">
+                    <input type="text" placeholder="First Name" class="input-ace">
+                    <input type="text" placeholder="Surname" class="input-ace">
+                </div>
+                <input type="text" id="username" placeholder="Username" class="input-ace" required>
+                <input type="password" id="password" placeholder="Password" class="input-ace" required>
+                <button type="submit" class="btn-submit">Continue</button>
+                <span class="back-link" onclick="showWelcome()">← Back</span>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header"><h2>ExamAce AI</h2></div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active">Current Chat</div>
+            </nav>
+        </aside>
+        <main class="main-view">
+            <div id="chat-window" class="chat-container">
+                <div class="empty-state"><h3>Ready to Study?</h3></div>
+            </div>
+            <div class="action-bar">
+                <button class="btn-action btn-primary" onclick="openModal('Summarize')">Summarize</button>
+                <button class="btn-action btn-secondary" onclick="openModal('Quiz')">Create Quiz</button>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-overlay" class="hidden">
+        <div class="modal-card">
+            <h2 id="modal-title">Details</h2>
+            <input type="text" id="topic-name" placeholder="Topic Name" class="input-ace">
+            <textarea id="topic-desc" placeholder="Context..." class="input-ace textarea"></textarea>
+            <div class="modal-btns">
+                <button class="btn-submit" onclick="handleGenerate()">Generate</button>
+                <button class="btn-outline" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
