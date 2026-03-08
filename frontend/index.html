@@ -12,9 +12,11 @@
         <div class="login-card animate-pop">
             <div id="welcome-screen" class="fade-in">
                 <h1>Welcome to ExamAce</h1>
-                <p class="subtitle">Your Study Partner</p>
-                <button class="btn-submit" onclick="showForm('login')">Log In</button>
-                <button class="btn-outline" onclick="showForm('register')">Register</button>
+                <p class="subtitle">Your AI-Powered Study Partner</p>
+                <div class="welcome-btns">
+                    <button class="btn-submit" onclick="showForm('login')">Log In</button>
+                    <button class="btn-submit btn-secondary" onclick="showForm('register')">Register</button>
+                </div>
             </div>
 
             <form id="auth-form" class="hidden fade-in" data-mode="login">
