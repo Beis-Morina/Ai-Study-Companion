@@ -1,64 +1,121 @@
 :root {
     --primary: #2563eb;
     --primary-hover: #1d4ed8;
+    --secondary: #475569;
+    --secondary-hover: #334155;
     --sidebar-bg: #0f172a;
-    --nav-inactive: rgba(255, 255, 255, 0.05);
-    --transition-fast: all 0.2s ease;
-    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --bg-gradient: linear-gradient(135deg, #5390ff 0%, #255aff 100%);
+    --white: #ffffff;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Segoe UI', sans-serif; }
 
 body { 
-    background: linear-gradient(135deg, #5390ff, #255aff); 
-    height: 100vh; display: flex; overflow: hidden; 
+    background: var(--bg-gradient); 
+    height: 100vh; 
+    display: flex; 
+    align-items: center;    /* Qendron vertikalisht */
+    justify-content: center; /* Qendron horizantalisht */
+    overflow: hidden; 
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* Auth Container */
+#auth-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-@keyframes popIn {
-    0% { opacity: 0; transform: scale(0.9); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-.fade-in { animation: fadeIn 0.5s ease forwards; }
-.animate-pop { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-
-/* Login Card */
 .login-card { 
-    background: white; padding: 40px; border-radius: 35px; 
-    width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
+    background: var(--white); 
+    padding: 3rem 2.5rem; 
+    border-radius: 24px; 
+    width: 100%; 
+    max-width: 420px; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
     text-align: center;
 }
 
-/* Inputs & Buttons */
-.input-ace { 
-    width: 100%; padding: 16px 25px; border-radius: 50px; 
-    border: 1px solid #ddd; outline: none; margin-bottom: 15px; font-size: 15px; 
+h1 {
+    font-size: 2.25rem;
+    color: #1e293b;
+    margin-bottom: 0.75rem;
+    font-weight: 800;
 }
 
-.btn-submit { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 50px; cursor: pointer; width: 100%; font-weight: 600; }
-.btn-submit:hover { background: var(--primary-hover); }
+.subtitle {
+    color: #64748b;
+    margin-bottom: 2.5rem;
+    font-size: 1.1rem;
+}
 
-/* Dashboard */
-#dashboard { position: absolute; inset: 0; display: flex; background: #f8fafc; z-index: 10; }
-.sidebar { width: 280px; background: var(--sidebar-bg); color: white; padding: 40px 20px; display: flex; flex-direction: column; }
-.main-view { flex: 1; display: flex; flex-direction: column; padding: 40px; align-items: center; }
+/* Butonat */
+.welcome-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn-submit { 
+    background: var(--primary); 
+    color: white; 
+    border: none; 
+    padding: 1rem; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    width: 100%; 
+    font-weight: 600; 
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn-submit:hover { 
+    background: var(--primary-hover); 
+    transform: translateY(-2px);
+}
+
+.btn-submit.btn-secondary {
+    background: var(--secondary);
+}
+
+.btn-submit.btn-secondary:hover {
+    background: var(--secondary-hover);
+}
+
+/* Inputs */
+.input-ace { 
+    width: 100%; 
+    padding: 1rem 1.25rem; 
+    border-radius: 12px; 
+    border: 1px solid #e2e8f0; 
+    outline: none; 
+    margin-bottom: 1rem; 
+    font-size: 1rem;
+    background: #f8fafc;
+}
+
+.input-ace:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Dashboard & OTHERS */
+#dashboard { position: fixed; inset: 0; display: flex; background: #f1f5f9; z-index: 100; }
+.sidebar { width: 280px; background: var(--sidebar-bg); color: white; padding: 2.5rem 1.5rem; }
+.main-view { flex: 1; display: flex; flex-direction: column; padding: 2.5rem; align-items: center; }
 
 .chat-container { 
-    width: 100%; max-width: 800px; height: 65vh; background: white; 
-    border-radius: 35px; padding: 40px; border: 1px solid #e2e8f0; 
-    overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.02);
+    width: 100%; max-width: 900px; height: 70vh; background: white; 
+    border-radius: 20px; padding: 2.5rem; border: 1px solid #e2e8f0; 
+    overflow-y: auto; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* AI Reply Formatting */
-.ai-reply { line-height: 1.6; color: #334155; }
-.ai-reply h1, .ai-reply h2 { color: var(--primary); margin: 15px 0 10px 0; }
-.ai-reply ul { margin-left: 20px; margin-bottom: 15px; }
+.back-link { display: block; margin-top: 1.5rem; color: #64748b; cursor: pointer; font-size: 0.9rem; }
+.back-link:hover { color: var(--primary); }
 
 .hidden { display: none !important; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.4s ease-out forwards; }
