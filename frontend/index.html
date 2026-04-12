@@ -4,64 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExamAce - AI Study Partner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
-<body>
-    <div id="auth-container">
-        <div class="login-card animate-pop">
-            <div id="welcome-screen" class="fade-in">
-                <h1>Welcome to ExamAce</h1>
-                <p class="subtitle">Your AI-Powered Study Partner</p>
-                <div class="welcome-btns">
-                    <button class="btn-submit" onclick="showForm('login')">Log In</button>
-                    <button class="btn-submit btn-secondary" onclick="showForm('register')">Register</button>
+<body class="app-loading" data-app-view="auth">
+    <div id="auth-container" class="app-screen">
+        <div id="login-card" class="login-card">
+            <div id="welcome-screen" class="welcome-grid">
+                <div class="brand-section panel-enter">
+                    <p class="eyebrow">AI Study Partner</p>
+                    <h1>ExamAce</h1>
+                    <p class="tagline">Ask smarter questions, summarize fast, and turn rough notes into exam-ready study sessions.</p>
+                </div>
+                <div class="action-section panel-enter">
+                    <button type="button" class="btn-auth btn-primary" data-auth-mode="login">Log In</button>
+                    <button type="button" class="btn-auth btn-secondary" data-auth-mode="register">Register</button>
                 </div>
             </div>
 
-            <form id="auth-form" class="hidden fade-in" data-mode="login">
-                <h1 id="form-title">Login</h1>
-                <div id="register-fields" class="hidden">
-                    <input type="text" id="first-name" placeholder="First Name" class="input-ace">
-                    <input type="text" id="surname" placeholder="Surname" class="input-ace">
-                </div>
-                <input type="text" id="username" placeholder="Username" class="input-ace" required>
-                <input type="password" id="password" placeholder="Password" class="input-ace" required>
-                <button type="submit" class="btn-submit">Continue</button>
-                <span class="back-link" onclick="showWelcome()">← Back</span>
-            </form>
+            <div id="form-container" class="form-container hidden">
+                <form id="auth-form" novalidate>
+                    <div class="form-header">
+                        <p id="form-kicker" class="eyebrow">Secure Access</p>
+                        <h2 id="form-title">Welcome Back</h2>
+                        <p id="form-subtitle" class="form-copy">Sign in to continue your study session.</p>
+                    </div>
+
+                    <div id="error-box" class="error-msg hidden" role="alert"></div>
+
+                    <div class="field-stack">
+                        <label class="input-group" for="username">
+                            <span class="input-label">Username</span>
+                            <input type="text" id="username" class="input-ace" autocomplete="username" required>
+                        </label>
+
+                        <label class="input-group" for="password">
+                            <span class="input-label">Password</span>
+                            <input type="password" id="password" class="input-ace" autocomplete="current-password" required>
+                        </label>
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit" id="auth-submit-btn" class="btn-auth btn-primary full-width">Continue</button>
+                        <button type="button" id="go-back-btn" class="back-link">Go Back</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <div id="dashboard" class="hidden">
+    <div id="dashboard" class="app-screen" aria-hidden="true">
         <aside class="sidebar">
-            <div class="sidebar-header"><h2>ExamAce AI</h2></div>
-            <nav id="conversation-list" class="sidebar-nav">
-                <div class="nav-item active" onclick="startNewChat()">+ New Study Session</div>
-            </nav>
+            <div class="sidebar-header">
+                <div>
+                    <p class="eyebrow eyebrow-dark">Workspace</p>
+                    <h2>ExamAce</h2>
+                </div>
+                <button type="button" id="logout-btn" class="btn-logout">Logout</button>
+            </div>
+
+            <div class="session-panel">
+                <button type="button" id="new-session-btn" class="btn-new-chat">+ New Session</button>
+                <div id="session-status" class="session-status">No active session yet.</div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>Study tools</h3>
+                <p>Use the quick actions to summarize material or generate a quiz inside the active chat.</p>
+            </div>
         </aside>
+
         <main class="main-view">
-            <div id="chat-window" class="chat-container">
-                <div class="empty-state"><h3>Ready to Study?</h3></div>
-            </div>
-            <div class="action-bar">
-                <button class="btn-action btn-primary" onclick="openModal('Summarize')">Summarize</button>
-                <button class="btn-action btn-secondary" onclick="openModal('Quiz')">Create Quiz</button>
-            </div>
+            <header class="dashboard-header">
+                <div>
+                    <p class="eyebrow">Active Session</p>
+                    <h3 id="session-title">Start a fresh study conversation</h3>
+                </div>
+
+                <div class="action-bar">
+                    <button type="button" class="btn-action" data-tool="summarize">Summarize</button>
+                    <button type="button" class="btn-action" data-tool="quiz">Quiz</button>
+                </div>
+            </header>
+
+            <div id="chat-error" class="error-msg hidden" role="alert"></div>
+
+            <section id="chat-window" class="chat-container" aria-live="polite">
+                <div id="chat-content" class="chat-content">
+                    <div id="chat-empty-state" class="empty-state">
+                        <h3>Ready when you are</h3>
+                        <p>Send a message, summarize your notes, or build a quick quiz from your study material.</p>
+                    </div>
+                </div>
+                <div id="loading-spinner" class="loading-indicator hidden">AI is analyzing...</div>
+            </section>
+
+            <form id="chat-form" class="composer" novalidate>
+                <label class="sr-only" for="chat-input">Message</label>
+                <textarea
+                    id="chat-input"
+                    class="composer-input"
+                    rows="1"
+                    placeholder="Ask ExamAce anything about your subject..."
+                ></textarea>
+                <button type="submit" id="chat-submit-btn" class="btn-auth btn-primary composer-btn">Send</button>
+            </form>
         </main>
     </div>
 
-    <div id="modal-overlay" class="hidden">
-        <div class="modal-card">
-            <h2 id="modal-title">Details</h2>
-            <input type="text" id="topic-name" placeholder="Topic Name" class="input-ace">
-            <textarea id="topic-desc" placeholder="Context..." class="input-ace textarea"></textarea>
+    <div id="modal-overlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <div>
+                    <p class="eyebrow">Study Tool</p>
+                    <h2 id="modal-title">Summarize</h2>
+                </div>
+                <button type="button" id="modal-close-btn" class="modal-close" aria-label="Close modal">&times;</button>
+            </div>
+
+            <p id="modal-description" class="modal-copy">Paste the topic and context you want the AI to work with.</p>
+            <div id="modal-error" class="error-msg hidden" role="alert"></div>
+
+            <label class="input-group" for="topic-name">
+                <span class="input-label">Topic</span>
+                <input type="text" id="topic-name" class="input-ace" placeholder="Cell biology, Roman law, integration by parts...">
+            </label>
+
+            <label class="input-group" for="topic-desc">
+                <span class="input-label">Context</span>
+                <textarea id="topic-desc" class="input-ace textarea" placeholder="Paste notes, textbook excerpts, or explain what you need."></textarea>
+            </label>
+
             <div class="modal-btns">
-                <button class="btn-submit" onclick="handleGenerate()">Generate</button>
-                <button class="btn-outline" onclick="closeModal()">Cancel</button>
+                <button type="button" id="modal-submit-btn" class="btn-auth btn-primary">Generate</button>
+                <button type="button" id="modal-cancel-btn" class="btn-auth btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
