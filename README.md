@@ -101,3 +101,39 @@ Relationships:
 
 Backend system completed and tested.
 Authentication, chat storage, and message history are fully functional.
+
+## Running the Backend
+
+1. Open the backend folder
+2. Activate the virtual environment:
+.venv/Scripts/activate.ps1
+3. Run the server: 
+python -m uvicorn main:app -reload
+
+The API will run on:
+http://127.0.0.1:8000
+
+Swagger documentation:
+http://127.0.0.1:8000/docs
+
+---
+
+## Running the Frontend
+
+1. Open the 'frontend' folder in VS Code
+2. Install the **Live Server** extension
+3. Right click 'index.html'
+4. Click **Open with Live Server**
+
+Make sure the frontend connects to:
+http://127.0.0.1:8000
+
+---
+
+## Running Across Two Laptops (Demo)
+
+Run backend with:
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+Then change the frontend API URL to:
+http://YOUR_IP_ADDRESS:8000
