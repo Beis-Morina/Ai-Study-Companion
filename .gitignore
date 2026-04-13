@@ -17,7 +17,8 @@ venv/
 node_modules/
 
 # VSCode
-.vscode/
+.vscode/*
+!.vscode/settings.json
 
 # OS
 .DS_Store

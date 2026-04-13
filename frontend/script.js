@@ -3,7 +3,7 @@ const AUTH_TOKEN_KEY = 'authToken';
 const CHAT_ID_KEY = 'currentChatId';
 
 let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
-let currentChatId = localStorage.getItem(CHAT_ID_KEY) || null;
+let currentChatId = normalizeChatId(localStorage.getItem(CHAT_ID_KEY));
 let activeTool = null;
 let isChatBusy = false;
 let isModalBusy = false;
@@ -128,6 +128,8 @@ function bindEvents() {
 }
 
 function hydrateView() {
+    authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
+    currentChatId = normalizeChatId(localStorage.getItem(CHAT_ID_KEY));
     updateSessionUI();
 
     if (authToken) {
@@ -382,16 +384,20 @@ async function performChatRequest(message) {
 }
 
 async function loadChatHistory(chatId) {
-    if (!chatId || !ensureAuthenticated()) {
+    const restoredChatId = normalizeChatId(chatId);
+
+    if (!restoredChatId || !ensureAuthenticated()) {
         return;
     }
 
+    persistCurrentChatId(restoredChatId);
+    updateSessionUI();
     clearChatError();
     setChatLoading(true, 'Loading session...');
 
     try {
-        const messages = await fetchChatHistory(chatId);
-        persistCurrentChatId(chatId);
+        const { chatId: resolvedChatId, messages } = await fetchChatHistory(restoredChatId);
+        persistCurrentChatId(resolvedChatId);
         renderMessages(messages);
         updateSessionUI();
     } catch (error) {
@@ -425,9 +431,12 @@ async function fetchChatHistory(chatId) {
                 ? data
                 : [];
 
-    return rawMessages
-        .map(normalizeMessage)
-        .filter(Boolean);
+    return {
+        chatId: normalizeChatId(data.chat_id ?? data.chatId ?? chatId),
+        messages: rawMessages
+            .map(normalizeMessage)
+            .filter(Boolean)
+    };
 }
 
 function normalizeMessage(message) {
