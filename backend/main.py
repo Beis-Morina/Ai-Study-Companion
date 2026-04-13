@@ -1,4 +1,5 @@
 
+import requests
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends
@@ -35,6 +36,7 @@ app.add_middleware(
 
 # ---- Auth config ----
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_only_change_me")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 ALGORITHM = "HS256"
 security = HTTPBearer()
 
@@ -43,6 +45,31 @@ security = HTTPBearer()
 def on_startup():
     init_db()
 
+def get_ai_response(message: str) -> str:
+    if not OPENROUTER_API_KEY:
+        return "Missing API key"
+
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "openai/gpt-4o-mini",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful study assistant."},
+                    {"role": "user", "content": message}
+                ],
+            },
+        )
+
+        data = response.json()
+        return data["choices"][0]["message"]["content"]
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 @app.get("/")
 def root():
@@ -135,8 +162,7 @@ def send_chat(payload: ChatSendRequest, user=Depends(get_current_user)):
 
     add_message(chat_id, "user", payload.message)
 
-    # TODO: Integrate OpenAI or Gemini API when school provides API key
-    reply = f"AI Response: {payload.message}"
+    reply = get_ai_response(payload.message)
 
     add_message(chat_id, "assistant", reply)
 
