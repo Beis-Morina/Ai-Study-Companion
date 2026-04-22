@@ -17,6 +17,7 @@ from db import (
     get_user_by_username,
     get_user_by_id,
     create_chat,
+    get_chats_for_user,
     add_message,
     get_messages,
     chat_belongs_to_user,
@@ -149,6 +150,24 @@ def login(payload: LoginRequest):
 
 
 # ---- Chat endpoints (protected) ----
+@app.get("/api/chat/sessions")
+def chat_sessions(user=Depends(get_current_user)):
+    rows = get_chats_for_user(user["id"])
+
+    return {
+        "sessions": [
+            {"chat_id": r["id"], "created_at": r["created_at"]}
+            for r in rows
+        ]
+    }
+
+
+@app.post("/api/chat/sessions")
+def create_chat_session(user=Depends(get_current_user)):
+    chat_id = create_chat(user["id"])
+    return {"chat_id": chat_id}
+
+
 @app.post("/api/chat/send")
 def send_chat(payload: ChatSendRequest, user=Depends(get_current_user)):
     user_id = user["id"]

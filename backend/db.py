@@ -91,6 +91,23 @@ def create_chat(user_id: int) -> int:
     return chat_id
 
 
+def get_chats_for_user(user_id: int):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, created_at
+        FROM chats
+        WHERE user_id = ?
+        ORDER BY datetime(created_at) DESC, id DESC
+        """,
+        (user_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
 def add_message(chat_id: int, role: str, content: str) -> None:
     conn = get_conn()
     cur = conn.cursor()
