@@ -419,6 +419,77 @@ h3 {
     color: rgba(220, 236, 255, 0.78);
 }
 
+.previous-chats {
+    display: grid;
+    gap: 10px;
+}
+
+.previous-chats-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.session-list {
+    display: grid;
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.session-item {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid rgba(220, 236, 255, 0.12);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background-color var(--transition),
+        border-color var(--transition),
+        transform var(--transition);
+}
+
+.session-item:hover {
+    transform: translateY(-1px);
+    background: rgba(220, 236, 255, 0.12);
+    border-color: rgba(220, 236, 255, 0.24);
+}
+
+.session-item.is-active {
+    background: rgba(15, 124, 255, 0.24);
+    border-color: rgba(220, 236, 255, 0.42);
+}
+
+.session-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+    transform: none;
+}
+
+.session-item-title,
+.session-item-meta {
+    display: block;
+}
+
+.session-item-title {
+    font-weight: 700;
+}
+
+.session-item-meta {
+    margin-top: 3px;
+    color: rgba(220, 236, 255, 0.68);
+    font-size: 0.82rem;
+}
+
+.session-list-empty {
+    color: rgba(220, 236, 255, 0.68);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
 .main-view {
     flex: 1;
     min-width: 0;

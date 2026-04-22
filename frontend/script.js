@@ -4,6 +4,7 @@ const CHAT_ID_KEY = 'currentChatId';
 
 let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
 let currentChatId = normalizeChatId(localStorage.getItem(CHAT_ID_KEY));
+let chatSessions = [];
 let activeTool = null;
 let isChatBusy = false;
 let isModalBusy = false;
@@ -66,6 +67,7 @@ function cacheElements() {
     els.logoutBtn = document.getElementById('logout-btn');
     els.newSessionBtn = document.getElementById('new-session-btn');
     els.sessionStatus = document.getElementById('session-status');
+    els.sessionList = document.getElementById('session-list');
     els.sessionTitle = document.getElementById('session-title');
     els.chatError = document.getElementById('chat-error');
     els.chatWindow = document.getElementById('chat-window');
@@ -107,6 +109,7 @@ function bindEvents() {
     els.goBackBtn.addEventListener('click', showWelcome);
     els.logoutBtn.addEventListener('click', handleLogout);
     els.newSessionBtn.addEventListener('click', startNewSession);
+    els.sessionList.addEventListener('click', handleSessionListClick);
     els.chatForm.addEventListener('submit', handleChatSubmit);
     els.chatInput.addEventListener('input', autoResizeComposer);
     els.chatInput.addEventListener('keydown', handleComposerKeydown);
@@ -134,6 +137,7 @@ function hydrateView() {
 
     if (authToken) {
         showDashboard();
+        loadChatSessions();
         if (currentChatId) {
             loadChatHistory(currentChatId);
         } else {
@@ -229,6 +233,7 @@ async function handleAuthSubmit(event) {
         clearChatError();
         closeModal();
         showDashboard();
+        loadChatSessions();
         els.chatInput.focus();
     } catch (error) {
         setAuthError(error.message || 'Unable to reach the server.');
@@ -255,8 +260,10 @@ function handleLogout() {
     resetBusyStates();
     clearSessionState();
     closeModal(true);
+    chatSessions = [];
     resetChatView();
     clearChatError();
+    renderChatSessions();
     showWelcome();
     setAppView('auth');
 }
@@ -268,15 +275,46 @@ function clearSessionState() {
     localStorage.removeItem(CHAT_ID_KEY);
 }
 
-function startNewSession() {
-    if (!ensureAuthenticated()) {
+async function startNewSession() {
+    if (!ensureAuthenticated() || isChatBusy) {
         return;
     }
 
-    persistCurrentChatId(null);
-    clearChatError();
-    resetChatView();
+    els.newSessionBtn.disabled = true;
+
+    try {
+        const chatId = await createChatSession();
+        persistCurrentChatId(chatId);
+        clearChatError();
+        resetChatView();
+        updateSessionUI();
+        await loadChatSessions();
+        els.chatInput.focus();
+    } catch (error) {
+        setChatError(error.message || 'Unable to start a new session.');
+    } finally {
+        els.newSessionBtn.disabled = isChatBusy;
+    }
+}
+
+async function handleSessionListClick(event) {
+    const sessionButton = event.target.closest('[data-chat-id]');
+    if (!sessionButton || isChatBusy) {
+        return;
+    }
+
+    const chatId = normalizeChatId(sessionButton.dataset.chatId);
+    if (!chatId || chatId === currentChatId) {
+        return;
+    }
+
+    await switchToSession(chatId);
+}
+
+async function switchToSession(chatId) {
+    persistCurrentChatId(chatId);
     updateSessionUI();
+    await loadChatHistory(chatId);
     els.chatInput.focus();
 }
 
@@ -331,6 +369,7 @@ async function sendPrompt(prompt, options = {}) {
         }
 
         updateSessionUI();
+        await loadChatSessions();
         return true;
     } catch (error) {
         if (!authToken) {
@@ -376,11 +415,28 @@ async function performChatRequest(message) {
     }
 
     if (currentChatId) {
-        const messages = await fetchChatHistory(currentChatId);
+        const { messages } = await fetchChatHistory(currentChatId);
         return { messages };
     }
 
     throw new Error('The AI response format was not recognized.');
+}
+
+async function createChatSession() {
+    const { response, data } = await apiRequest('/api/chat/sessions', {
+        method: 'POST'
+    });
+
+    if (!response.ok) {
+        throw new Error(extractErrorMessage(data, 'Unable to start a new session.'));
+    }
+
+    const chatId = normalizeChatId(data.chat_id ?? data.chatId ?? data.id);
+    if (!chatId) {
+        throw new Error('The server did not return a chat ID for the new session.');
+    }
+
+    return chatId;
 }
 
 async function loadChatHistory(chatId) {
@@ -414,6 +470,28 @@ async function loadChatHistory(chatId) {
     }
 }
 
+async function loadChatSessions() {
+    if (!ensureAuthenticated()) {
+        return;
+    }
+
+    try {
+        const { response, data } = await apiRequest('/api/chat/sessions', {
+            method: 'GET'
+        });
+
+        if (!response.ok) {
+            throw new Error(extractErrorMessage(data, 'Unable to load previous chats.'));
+        }
+
+        chatSessions = normalizeChatSessions(data);
+        renderChatSessions();
+    } catch (error) {
+        chatSessions = [];
+        renderChatSessions(error.message || 'Unable to load previous chats.');
+    }
+}
+
 async function fetchChatHistory(chatId) {
     const { response, data } = await apiRequest(`/api/chat/history?chat_id=${encodeURIComponent(chatId)}`, {
         method: 'GET'
@@ -436,6 +514,36 @@ async function fetchChatHistory(chatId) {
         messages: rawMessages
             .map(normalizeMessage)
             .filter(Boolean)
+    };
+}
+
+function normalizeChatSessions(data) {
+    const rawSessions = Array.isArray(data.sessions)
+        ? data.sessions
+        : Array.isArray(data.chats)
+            ? data.chats
+            : Array.isArray(data)
+                ? data
+                : [];
+
+    return rawSessions
+        .map(normalizeChatSession)
+        .filter(Boolean);
+}
+
+function normalizeChatSession(session) {
+    if (!session || typeof session !== 'object') {
+        return null;
+    }
+
+    const chatId = normalizeChatId(session.chat_id ?? session.chatId ?? session.id);
+    if (!chatId) {
+        return null;
+    }
+
+    return {
+        chatId,
+        createdAt: session.created_at ?? session.createdAt ?? ''
     };
 }
 
@@ -476,6 +584,75 @@ function appendMessage(role, content) {
     scrollChatToBottom();
 }
 
+function renderChatSessions(errorMessage = '') {
+    if (!els.sessionList) {
+        return;
+    }
+
+    els.sessionList.innerHTML = '';
+
+    if (errorMessage) {
+        const error = document.createElement('div');
+        error.className = 'session-list-empty';
+        error.textContent = errorMessage;
+        els.sessionList.appendChild(error);
+        return;
+    }
+
+    if (!chatSessions.length) {
+        const empty = document.createElement('div');
+        empty.className = 'session-list-empty';
+        empty.textContent = 'No previous chats yet.';
+        els.sessionList.appendChild(empty);
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    chatSessions.forEach((session) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'session-item';
+        item.dataset.chatId = session.chatId;
+        item.disabled = isChatBusy;
+
+        if (session.chatId === currentChatId) {
+            item.classList.add('is-active');
+            item.setAttribute('aria-current', 'true');
+        }
+
+        const title = document.createElement('span');
+        title.className = 'session-item-title';
+        title.textContent = `Chat ${session.chatId}`;
+
+        const meta = document.createElement('span');
+        meta.className = 'session-item-meta';
+        meta.textContent = formatSessionDate(session.createdAt);
+
+        item.append(title, meta);
+        fragment.appendChild(item);
+    });
+
+    els.sessionList.appendChild(fragment);
+}
+
+function formatSessionDate(value) {
+    if (!value) {
+        return 'Saved session';
+    }
+
+    const parsedDate = new Date(String(value).replace(' ', 'T'));
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value;
+    }
+
+    return parsedDate.toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
 function createMessageElement(role, content) {
     const message = document.createElement('article');
     message.className = `message ${role === 'assistant' ? 'message-ai' : 'message-user'}`;
@@ -513,11 +690,13 @@ function scrollChatToBottom() {
 function updateSessionUI() {
     if (currentChatId) {
         els.sessionTitle.textContent = `Working in session ${currentChatId}`;
-        els.sessionStatus.textContent = `Active chat ID: ${currentChatId}. History can be restored from the backend.`;
+        els.sessionStatus.textContent = `Active chat ID: ${currentChatId}`;
     } else {
         els.sessionTitle.textContent = 'Start a fresh study conversation';
         els.sessionStatus.textContent = 'No active session yet.';
     }
+
+    renderChatSessions();
 }
 
 function persistCurrentChatId(chatId) {
@@ -615,6 +794,7 @@ function setChatLoading(isLoading, label = 'AI is analyzing...') {
     els.newSessionBtn.disabled = isLoading;
     els.loadingSpinner.textContent = label;
     els.loadingSpinner.classList.toggle('hidden', !isLoading);
+    renderChatSessions();
 }
 
 function autoResizeComposer() {
