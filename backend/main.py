@@ -1,5 +1,4 @@
 
-import requests
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends
@@ -10,6 +9,7 @@ from jose import jwt, JWTError
 import hashlib
 import os
 from dotenv import load_dotenv
+from openai import OpenAI
 
 from db import (
     init_db,
@@ -37,7 +37,8 @@ app.add_middleware(
 
 # ---- Auth config ----
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_only_change_me")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 ALGORITHM = "HS256"
 security = HTTPBearer()
 
@@ -47,30 +48,31 @@ def on_startup():
     init_db()
 
 def get_ai_response(message: str) -> str:
-    if not OPENROUTER_API_KEY:
-        return "Missing API key"
-
-    try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "openai/gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": "You are a helpful study assistant."},
-                    {"role": "user", "content": message}
-                ],
-            },
+    if not OPENAI_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="Missing OPENAI_API_KEY. Add it to backend/.env before sending chat messages."
         )
 
-        data = response.json()
-        return data["choices"][0]["message"]["content"]
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a helpful study assistant."},
+                {"role": "user", "content": message}
+            ],
+        )
 
+        reply = response.choices[0].message.content
+        if not reply:
+            raise HTTPException(status_code=502, detail="OpenAI returned an empty response.")
+
+        return reply
+    except HTTPException:
+        raise
     except Exception as e:
-        return f"Error: {str(e)}"
+        raise HTTPException(status_code=502, detail=f"OpenAI request failed: {str(e)}")
 
 @app.get("/")
 def root():
